@@ -29,7 +29,7 @@ export const Hero = ({ scrollTo }: { scrollTo: (id: string) => void }) => {
                     </div>
                 </h1>
 
-                <div className="text-xl text-slate-400 mb-8 max-w-lg font-light border-l-2 border-cyan-500 pl-4 pointer-events-auto backdrop-blur-sm bg-slate-950/30 p-4 rounded-r-lg">
+                <div className="text-xl text-slate-400 mb-8 max-w-lg font-light border-l-2 border-cyan-500 pl-4 pointer-events-auto">
                     <div className="flex items-center gap-2 mb-2">
                         <Terminal size={18} className="text-cyan-500" />
                         <HackerText text="Software Developer" className="text-white font-semibold" />

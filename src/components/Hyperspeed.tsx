@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Points, PointMaterial } from '@react-three/drei';
 import * as THREE from 'three';
@@ -7,6 +7,34 @@ import { useGyroscope } from '../hooks/useGyroscope';
 const StarField = (props: any) => {
     const ref = useRef<THREE.Points>(null);
     const { orientation, isSupported } = useGyroscope();
+    const [scrollSpeed, setScrollSpeed] = useState(0);
+    const lastScrollY = useRef(0);
+    const scrollVelocity = useRef(0);
+
+    useEffect(() => {
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY;
+            const delta = currentScrollY - lastScrollY.current;
+            scrollVelocity.current = Math.abs(delta);
+            lastScrollY.current = currentScrollY;
+
+            // Update scroll speed for trail effect
+            setScrollSpeed(Math.min(scrollVelocity.current * 0.1, 5));
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+
+        // Decay scroll speed
+        const interval = setInterval(() => {
+            scrollVelocity.current *= 0.9;
+            setScrollSpeed(Math.min(scrollVelocity.current * 0.1, 5));
+        }, 50);
+
+        return () => {
+            window.removeEventListener('scroll', handleScroll);
+            clearInterval(interval);
+        };
+    }, []);
 
     const [sphere] = useMemo(() => {
         const positions = new Float32Array(5000 * 3);
@@ -36,8 +64,16 @@ const StarField = (props: any) => {
                 ref.current.rotation.x -= delta / 10;
                 ref.current.rotation.y -= delta / 15;
             }
+
+            // Add scroll-based z-rotation for hyperspeed effect
+            if (scrollSpeed > 0.5) {
+                ref.current.rotation.z += delta * scrollSpeed;
+            }
         }
     });
+
+    // Calculate point size based on scroll speed for trail effect
+    const pointSize = 0.002 + scrollSpeed * 0.001;
 
     return (
         <group rotation={[0, 0, Math.PI / 4]}>
@@ -45,9 +81,10 @@ const StarField = (props: any) => {
                 <PointMaterial
                     transparent
                     color="#06b6d4"
-                    size={0.002}
+                    size={pointSize}
                     sizeAttenuation={true}
                     depthWrite={false}
+                    opacity={scrollSpeed > 0.5 ? 0.8 : 1}
                 />
             </Points>
         </group>

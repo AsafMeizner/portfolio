@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import * as THREE from 'three';
 import { useGyroscope } from '../hooks/useGyroscope';
 
 export const RobotCore = () => {
@@ -56,18 +57,21 @@ export const RobotCore = () => {
 
             // Blend gyroscope and mouse controls
             if (isSupported && Math.abs(orientation.beta) > 0 && Math.abs(orientation.gamma) > 0) {
-                // Use gyroscope on mobile
-                targetAngleX = (orientation.beta / 90) * Math.PI * 0.5;
-                targetAngleY = (orientation.gamma / 90) * Math.PI * 0.5;
+                // Use gyroscope on mobile with clamping to prevent extreme values
+                const clampedBeta = THREE.MathUtils.clamp(orientation.beta, -90, 90);
+                const clampedGamma = THREE.MathUtils.clamp(orientation.gamma, -90, 90);
+
+                targetAngleX = (clampedBeta / 90) * Math.PI * 0.3; // Reduced multiplier for smoother movement
+                targetAngleY = (clampedGamma / 90) * Math.PI * 0.3;
             } else {
                 // Use mouse on desktop
                 targetAngleX = mouseTargetY;
                 targetAngleY = mouseTargetX;
             }
 
-            // Smooth Rotation Damping
-            angleX += (targetAngleX - angleX) * 0.05;
-            angleY += (targetAngleY - angleY) * 0.05;
+            // Increased Smooth Rotation Damping for less jumpiness
+            angleX += (targetAngleX - angleX) * 0.08;
+            angleY += (targetAngleY - angleY) * 0.08;
 
             // Idle Rotation
             angleY += 0.002;

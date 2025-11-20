@@ -298,6 +298,17 @@ const CyberGame = () => {
         }
     };
 
+    // 'M' key handler for fullscreen
+    useEffect(() => {
+        const handleKeyPress = (e: KeyboardEvent) => {
+            if (e.key === 'm' || e.key === 'M') {
+                setIsFullscreen(prev => !prev);
+            }
+        };
+        window.addEventListener('keydown', handleKeyPress);
+        return () => window.removeEventListener('keydown', handleKeyPress);
+    }, []);
+
     const gameContent = (
         <div className="w-full h-[600px] bg-black relative overflow-hidden rounded-xl border border-cyan-900/50 shadow-[0_0_50px_rgba(6,182,212,0.2)]">
             {/* UI Overlay */}
@@ -380,7 +391,7 @@ const CyberGame = () => {
 
     return (
         <>
-            {gameContent}
+            {!isFullscreen && gameContent}
             <GameModal isOpen={isFullscreen} onClose={() => setIsFullscreen(false)}>
                 {gameContent}
             </GameModal>
