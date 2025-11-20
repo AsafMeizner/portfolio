@@ -682,9 +682,6 @@ const CelestialObject = ({ body, setTarget, shipPosition }: { body: CelestialBod
 
     // Calculate relative position
     // We subtract shipPosition from body.position to get position relative to camera (which is at 0,0,0)
-    const relativePos = useMemo(() => {
-        return body.position.clone().sub(shipPosition);
-    }, [body.position, shipPosition]);
 
     useFrame((state) => {
         const t = state.clock.getElapsedTime();
@@ -984,7 +981,6 @@ const UniverseEngine = ({
     // CAMERA CENTRIC STATE
     const shipPosition = useRef(new THREE.Vector3(0, 0, 0)); // The "Real" position in the universe
     const lastChunk = useRef(new THREE.Vector3(0, 0, 0));
-    const velocity = useRef(new THREE.Vector3(0, 0, 0));
 
     // Initial Orientation Calibration
     const initialOrientation = useRef<{ alpha: number, beta: number, gamma: number } | null>(null);
