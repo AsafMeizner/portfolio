@@ -16,34 +16,34 @@ interface Project {
 const projects: Project[] = [
     {
         id: 'PRJ-001',
-        title: 'FRC Scouting Intelligence',
-        desc: 'Distributed data collection system for robotics competitions with real-time predictive analytics and strategic decision support.',
+        title: 'MAshkif',
+        desc: 'General purpose scouting app for FRC robotics competitions with easy-to-use interface and comprehensive data management. Built with Ionic/Capacitor for cross-platform deployment.',
         status: 'DEPLOYED',
-        tech: ['React', 'TypeScript', 'MongoDB', 'Node.js', 'Express', 'Socket.IO'],
+        tech: ['Ionic', 'TypeScript', 'Flask', 'Python', 'Capacitor', 'Electron'],
         icon: Database,
         color: '#06b6d4',
-        github: '#'
+        github: 'https://github.com/AsafMeizner/MAshkif',
+        link: 'https://github.com/AsafMeizner/MAshkif-website'
     },
     {
         id: 'PRJ-002',
-        title: 'Autonomous Path Planner',
-        desc: 'Advanced motion profiling algorithm using cubic spline interpolation for smooth autonomous robot navigation with real-time obstacle avoidance.',
-        status: 'ACTIVE',
-        tech: ['Java', 'Python', 'OpenCV', 'PID Control', 'Path Optimization'],
+        title: 'SwiftBeam',
+        desc: 'Cross-platform AirDrop alternative using Wi-Fi Aware technology for direct device-to-device file transfers. No internet required - seamless sharing across iOS, Android, Windows, and macOS.',
+        status: 'DEPLOYED',
+        tech: ['Ionic', 'TypeScript', 'Wi-Fi Aware', 'Capacitor', 'P2P'],
         icon: Brain,
         color: '#a855f7',
-        github: '#'
+        github: 'https://github.com/AsafMeizner/swiftbeam'
     },
     {
         id: 'PRJ-003',
-        title: 'Neural Network Visualizer',
-        desc: 'Interactive deep learning visualization platform demonstrating backpropagation, activation functions, and gradient descent in real-time.',
-        status: 'DEPLOYED',
-        tech: ['Python', 'PyTorch', 'D3.js', 'Flask', 'WebSockets'],
+        title: 'Capacitor WiFi Aware',
+        desc: 'Capacitor plugin enabling Wi-Fi Aware (Neighbor Awareness Networking) for device-to-device discovery, messaging, P2P sockets, and file transfers without traditional infrastructure.',
+        status: 'ACTIVE',
+        tech: ['TypeScript', 'Android', 'iOS', 'Capacitor', 'Wi-Fi Aware', 'Native'],
         icon: Code2,
         color: '#10b981',
-        link: '#',
-        github: '#'
+        github: 'https://github.com/AsafMeizner/capacitor-wifi-aware'
     }
 ];
 
