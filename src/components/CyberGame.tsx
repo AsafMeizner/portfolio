@@ -129,7 +129,7 @@ const Tunnel = ({ speed }: { speed: number }) => {
 
 const GameLogic = ({ onGameOver, onScore }: { onGameOver: () => void, onScore: (s: number) => void }) => {
     const { mouse, viewport, camera } = useThree();
-    const { orientation, isSupported } = useGyroscope();
+    const { orientationRef, isSupported } = useGyroscope();
     const [shipPos, setShipPos] = useState<[number, number, number]>([0, 0, 0]);
     const [obstacles, setObstacles] = useState<{ x: number, y: number, z: number, rot: number }[]>([]);
     const [pickups, setPickups] = useState<{ x: number, y: number, z: number }[]>([]);
@@ -189,6 +189,7 @@ const GameLogic = ({ onGameOver, onScore }: { onGameOver: () => void, onScore: (
         }
 
         const currentSpeed = isBoosting ? BOOST_SPEED : BASE_SPEED;
+        const orientation = orientationRef.current;
 
         // Ship Movement - Use gyroscope on mobile, mouse on desktop
         let targetX, targetY;
@@ -288,6 +289,7 @@ const GameLogic = ({ onGameOver, onScore }: { onGameOver: () => void, onScore: (
 };
 
 const CyberGame = () => {
+    const { isSupported } = useGyroscope();
     const [gameState, setGameState] = useState<'start' | 'playing' | 'gameover'>('start');
     const [score, setScore] = useState(0);
     const [isFullscreen, setIsFullscreen] = useState(false);
@@ -362,7 +364,7 @@ const CyberGame = () => {
                 )}
             </div>
 
-            <Canvas>
+            <Canvas dpr={[1, 1.5]}>
                 <PerspectiveCamera makeDefault position={[0, 0, 5]} />
                 <color attach="background" args={['#020617']} />
                 <fog attach="fog" args={['#020617', 5, 40]} />
@@ -370,8 +372,8 @@ const CyberGame = () => {
                 <ambientLight intensity={0.5} />
                 <pointLight position={[10, 10, 10]} intensity={1} />
 
-                <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={2} />
-                <Sparkles count={200} scale={12} size={2} speed={0.4} opacity={0.5} color="#06b6d4" />
+                <Stars radius={100} depth={50} count={isSupported ? 2000 : 5000} factor={4} saturation={0} fade speed={2} />
+                <Sparkles count={isSupported ? 50 : 200} scale={12} size={2} speed={0.4} opacity={0.5} color="#06b6d4" />
 
                 {gameState === 'playing' && (
                     <GameLogic
@@ -380,11 +382,13 @@ const CyberGame = () => {
                     />
                 )}
 
-                <EffectComposer>
-                    <Bloom luminanceThreshold={0.2} mipmapBlur intensity={1.5} radius={0.5} />
-                    <ChromaticAberration offset={[0.002, 0.002]} />
-                    <Scanline density={1.5} opacity={0.3} />
-                </EffectComposer>
+                {!isSupported && (
+                    <EffectComposer>
+                        <Bloom luminanceThreshold={0.2} mipmapBlur intensity={1.5} radius={0.5} />
+                        <ChromaticAberration offset={[0.002, 0.002]} />
+                        <Scanline density={1.5} opacity={0.3} />
+                    </EffectComposer>
+                )}
             </Canvas>
         </div>
     );

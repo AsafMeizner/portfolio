@@ -1,10 +1,9 @@
 import { useEffect, useRef } from 'react';
-import * as THREE from 'three';
 import { useGyroscope } from '../hooks/useGyroscope';
 
 export const RobotCore = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
-    const { orientation, isSupported } = useGyroscope();
+    const { orientationRef, isSupported } = useGyroscope();
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -14,6 +13,7 @@ export const RobotCore = () => {
 
         let width = canvas.width = canvas.offsetWidth;
         let height = canvas.height = canvas.offsetHeight;
+        let animationFrameId: number;
 
         const vertices = [
             { x: -1, y: -1, z: -1 }, { x: 1, y: -1, z: -1 }, { x: 1, y: 1, z: -1 }, { x: -1, y: 1, z: -1 },
@@ -30,9 +30,12 @@ export const RobotCore = () => {
         let mouseTargetX = 0, mouseTargetY = 0;
 
         const handleMouseMove = (e: MouseEvent) => {
-            const rect = canvas.getBoundingClientRect();
-            mouseTargetX = (e.clientX - rect.left - width / 2) * 0.0005;
-            mouseTargetY = (e.clientY - rect.top - height / 2) * 0.0005;
+            // Only update mouse position if gyroscope is not active
+            if (!isSupported || Math.abs(orientationRef.current.beta) === 0) {
+                const rect = canvas.getBoundingClientRect();
+                mouseTargetX = (e.clientX - rect.left - width / 2) * 0.0005;
+                mouseTargetY = (e.clientY - rect.top - height / 2) * 0.0005;
+            }
         };
 
         document.addEventListener('mousemove', handleMouseMove);
@@ -55,23 +58,22 @@ export const RobotCore = () => {
         const loop = () => {
             ctx.clearRect(0, 0, width, height);
 
-            // Blend gyroscope and mouse controls
-            if (isSupported && Math.abs(orientation.beta) > 0 && Math.abs(orientation.gamma) > 0) {
-                // Use gyroscope on mobile with clamping to prevent extreme values
-                const clampedBeta = THREE.MathUtils.clamp(orientation.beta, -90, 90);
-                const clampedGamma = THREE.MathUtils.clamp(orientation.gamma, -90, 90);
+            const currentOrientation = orientationRef.current;
 
-                targetAngleX = (clampedBeta / 90) * Math.PI * 0.3; // Reduced multiplier for smoother movement
-                targetAngleY = (clampedGamma / 90) * Math.PI * 0.3;
+            // Blend gyroscope and mouse controls
+            if (isSupported && Math.abs(currentOrientation.beta) > 0 && Math.abs(currentOrientation.gamma) > 0) {
+                // Use gyroscope on mobile
+                targetAngleX = (currentOrientation.beta / 90) * Math.PI * 0.5;
+                targetAngleY = (currentOrientation.gamma / 90) * Math.PI * 0.5;
             } else {
                 // Use mouse on desktop
                 targetAngleX = mouseTargetY;
                 targetAngleY = mouseTargetX;
             }
 
-            // Increased Smooth Rotation Damping for less jumpiness
-            angleX += (targetAngleX - angleX) * 0.08;
-            angleY += (targetAngleY - angleY) * 0.08;
+            // Smooth Rotation Damping
+            angleX += (targetAngleX - angleX) * 0.05;
+            angleY += (targetAngleY - angleY) * 0.05;
 
             // Idle Rotation
             angleY += 0.002;
@@ -108,7 +110,7 @@ export const RobotCore = () => {
                 ctx.fill();
             });
 
-            requestAnimationFrame(loop);
+            animationFrameId = requestAnimationFrame(loop);
         };
 
         loop();
@@ -122,8 +124,9 @@ export const RobotCore = () => {
         return () => {
             document.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('resize', handleResize);
+            cancelAnimationFrame(animationFrameId);
         };
-    }, [orientation, isSupported]);
+    }, [isSupported]); // Removed orientation from dependencies
 
     return <canvas ref={canvasRef} className="w-full h-[400px]" />;
 };
