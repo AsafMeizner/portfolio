@@ -457,8 +457,8 @@ const generateSystem = (chunkX: number, chunkY: number, chunkZ: number): Celesti
     const seed = chunkX * 73856093 ^ chunkY * 19349663 ^ chunkZ * 83492791;
     const rng = new Random(seed);
 
-    // Chance to be empty space
-    if (rng.next() > 0.3) return null as any;
+    // Chance to be empty space (Reduced to 20% for higher density)
+    if (rng.next() > 0.8) return null as any;
 
     // System Position within chunk
     const posX = (chunkX * CHUNK_SIZE) + rng.range(-CHUNK_SIZE / 2, CHUNK_SIZE / 2);
@@ -490,7 +490,7 @@ const generateSystem = (chunkX: number, chunkY: number, chunkZ: number): Celesti
     }
 
     const star: CelestialBody = {
-        id: `star - ${chunkX} - ${chunkY} - ${chunkZ}`,
+        id: `star-${chunkX}-${chunkY}-${chunkZ}`,
         type: 'star',
         position: new THREE.Vector3(posX, posY, posZ),
         radius: starRadius,
@@ -518,7 +518,7 @@ const generateSystem = (chunkX: number, chunkY: number, chunkZ: number): Celesti
         if (pType === 3) { pColor = '#ff4400'; pClass = 'Volcanic World'; }
 
         const planet: CelestialBody = {
-            id: `planet - ${star.id} - ${i}`,
+            id: `planet-${star.id}-${i}`,
             type: 'planet',
             position: new THREE.Vector3(0, 0, 0), // Relative to star
             radius: pRadius,
@@ -542,7 +542,7 @@ const generateSystem = (chunkX: number, chunkY: number, chunkZ: number): Celesti
             for (let j = 0; j < numMoons; j++) {
                 const mDist = pRadius + 5 + (j * 3);
                 planet.children?.push({
-                    id: `moon - ${planet.id} - ${j}`,
+                    id: `moon-${planet.id}-${j}`,
                     type: 'moon',
                     position: new THREE.Vector3(0, 0, 0),
                     radius: rng.range(0.5, 1.5),
@@ -568,7 +568,7 @@ const HUD = ({ target }: { target: CelestialBody | null }) => {
     if (!target) return null;
 
     return (
-        <Html position={[0, 0, 0]} center> {/* Positioned in 3D space? No, let's use fixed overlay */}
+        <Html position={[0, 0, 0]} center>
             <div className="fixed bottom-10 right-10 w-64 bg-black/80 border border-cyan-500/50 p-4 rounded-lg backdrop-blur-md text-cyan-400 font-mono text-sm pointer-events-none select-none">
                 <div className="flex justify-between items-center border-b border-cyan-900/50 pb-2 mb-2">
                     <span className="font-bold text-lg text-white">{target.data.name}</span>
@@ -609,10 +609,6 @@ const CelestialObject = ({ body, setTarget }: { body: CelestialBody, setTarget: 
         if (materialRef.current) {
             materialRef.current.time = t;
             if (body.type === 'planet' || body.type === 'moon') {
-                // Light direction is vector from planet to parent (0,0,0 in local space)
-                // Actually parentPos is world pos of parent.
-                // But we are in parent's local space. So parent is at 0,0,0.
-                // So light dir is -position.
                 if (ref.current) {
                     const lightDir = new THREE.Vector3(0, 0, 0).sub(ref.current.position).normalize();
                     materialRef.current.lightDir = lightDir;
@@ -649,17 +645,15 @@ const CelestialObject = ({ body, setTarget }: { body: CelestialBody, setTarget: 
                         ref={materialRef}
                         baseColor={new THREE.Color(body.color)}
                         type={body.textureType || 0}
-                        seed={Math.random() * 100} // Static seed for texture
+                        seed={Math.random() * 100}
                     />
                 )}
             </mesh>
 
-            {/* Star Light */}
             {body.type === 'star' && (
                 <pointLight intensity={2} distance={500} decay={1} color={body.color} />
             )}
 
-            {/* Orbit Line */}
             {body.orbitRadius && (
                 <mesh rotation={[Math.PI / 2, 0, 0]}>
                     <ringGeometry args={[body.orbitRadius - 0.2, body.orbitRadius + 0.2, 128]} />
@@ -667,7 +661,6 @@ const CelestialObject = ({ body, setTarget }: { body: CelestialBody, setTarget: 
                 </mesh>
             )}
 
-            {/* Children (Recursion) */}
             {body.children?.map(child => (
                 <CelestialObject
                     key={child.id}
@@ -679,13 +672,163 @@ const CelestialObject = ({ body, setTarget }: { body: CelestialBody, setTarget: 
     );
 };
 
+// --- UI Controls ---
+
+const Joystick = ({ onMove }: { onMove: (x: number, y: number) => void }) => {
+    const stickRef = useRef<HTMLDivElement>(null);
+    const baseRef = useRef<HTMLDivElement>(null);
+    const [active, setActive] = useState(false);
+    const [pos, setPos] = useState({ x: 0, y: 0 });
+
+    const handleStart = () => {
+        setActive(true);
+    };
+
+    const handleEnd = () => {
+        setActive(false);
+        setPos({ x: 0, y: 0 });
+        onMove(0, 0);
+    };
+
+    const handleMove = (clientX: number, clientY: number) => {
+        if (!active || !baseRef.current) return;
+        const base = baseRef.current.getBoundingClientRect();
+        const centerX = base.left + base.width / 2;
+        const centerY = base.top + base.height / 2;
+
+        const maxDist = base.width / 2;
+
+        let dx = clientX - centerX;
+        let dy = clientY - centerY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist > maxDist) {
+            const angle = Math.atan2(dy, dx);
+            dx = Math.cos(angle) * maxDist;
+            dy = Math.sin(angle) * maxDist;
+        }
+
+        setPos({ x: dx, y: dy });
+        onMove(dx / maxDist, dy / maxDist);
+    };
+
+    useEffect(() => {
+        const onTouchMove = (e: TouchEvent) => handleMove(e.touches[0].clientX, e.touches[0].clientY);
+        const onMouseMove = (e: MouseEvent) => handleMove(e.clientX, e.clientY);
+        const onUp = () => handleEnd();
+
+        if (active) {
+            window.addEventListener('touchmove', onTouchMove);
+            window.addEventListener('touchend', onUp);
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup', onUp);
+        }
+        return () => {
+            window.removeEventListener('touchmove', onTouchMove);
+            window.removeEventListener('touchend', onUp);
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', onUp);
+        };
+    }, [active]);
+
+    return (
+        <div
+            ref={baseRef}
+            className="w-32 h-32 rounded-full bg-slate-900/50 border border-cyan-500/30 backdrop-blur-sm relative touch-none pointer-events-auto"
+            onMouseDown={handleStart}
+            onTouchStart={handleStart}
+        >
+            <div
+                ref={stickRef}
+                className="w-12 h-12 rounded-full bg-cyan-500/80 shadow-[0_0_15px_rgba(6,182,212,0.5)] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-transform duration-75"
+                style={{ transform: `translate(${pos.x}px, ${pos.y}px) translate(-50%, -50%)` }}
+            />
+        </div>
+    );
+};
+
+const SpeedLever = ({ value, onChange }: { value: number, onChange: (v: number) => void }) => {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [dragging, setDragging] = useState(false);
+
+    const handleMove = (clientY: number) => {
+        if (!containerRef.current) return;
+        const rect = containerRef.current.getBoundingClientRect();
+        const height = rect.height;
+        const relativeY = Math.max(0, Math.min(height, clientY - rect.top));
+        // Invert: Bottom is 0, Top is 1
+        const newVal = 1 - (relativeY / height);
+        onChange(newVal);
+    };
+
+    useEffect(() => {
+        const onTouchMove = (e: TouchEvent) => handleMove(e.touches[0].clientY);
+        const onMouseMove = (e: MouseEvent) => handleMove(e.clientY);
+        const onUp = () => setDragging(false);
+
+        if (dragging) {
+            window.addEventListener('touchmove', onTouchMove);
+            window.addEventListener('touchend', onUp);
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup', onUp);
+        }
+        return () => {
+            window.removeEventListener('touchmove', onTouchMove);
+            window.removeEventListener('touchend', onUp);
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', onUp);
+        };
+    }, [dragging]);
+
+    return (
+        <div className="flex flex-col items-center gap-2 pointer-events-auto">
+            <div className="text-cyan-400 font-mono text-xs">WARP</div>
+            <div
+                ref={containerRef}
+                className="w-8 h-32 bg-slate-900/50 border border-cyan-500/30 rounded-full relative overflow-hidden cursor-pointer touch-none"
+                onMouseDown={(e) => { setDragging(true); handleMove(e.clientY); }}
+                onTouchStart={(e) => { setDragging(true); handleMove(e.touches[0].clientY); }}
+            >
+                <div
+                    className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-cyan-900 to-cyan-400 transition-all duration-75"
+                    style={{ height: `${value * 100}%` }}
+                />
+                {/* Ticks */}
+                {[...Array(5)].map((_, i) => (
+                    <div key={i} className="absolute w-full h-[1px] bg-cyan-500/20" style={{ bottom: `${i * 25}%` }} />
+                ))}
+            </div>
+            <div className="text-cyan-400 font-mono text-xs">{(value * 9 + 1).toFixed(1)}x</div>
+        </div>
+    );
+};
+
 const UniverseEngine = () => {
-    const { orientationRef, accelerationRef, isSupported } = useGyroscope();
+    const { orientationRef, isSupported } = useGyroscope();
     const { camera } = useThree();
     const [systems, setSystems] = useState<CelestialBody[]>([]);
     const [target, setTarget] = useState<CelestialBody | null>(null);
     const lastChunk = useRef(new THREE.Vector3(0, 0, 0));
     const velocity = useRef(new THREE.Vector3(0, 0, 0));
+
+    // Controls
+    const joystickRef = useRef({ x: 0, y: 0 });
+    const speedRef = useRef(0); // 0 to 1
+    const [speedDisplay, setSpeedDisplay] = useState(0); // For UI updates
+
+    // Initial Orientation Calibration
+    const initialOrientation = useRef<{ alpha: number, beta: number, gamma: number } | null>(null);
+    const calibrated = useRef(false);
+
+    // Update speed ref from UI
+    const handleSpeedChange = (v: number) => {
+        speedRef.current = v;
+        setSpeedDisplay(v);
+    };
+
+    const handleJoystickMove = (x: number, y: number) => {
+        joystickRef.current = { x, y };
+    };
 
     // Initial Generation
     useEffect(() => {
@@ -760,34 +903,55 @@ const UniverseEngine = () => {
     }, []);
 
     useFrame((state, delta) => {
-        const accel = accelerationRef.current;
         const orient = orientationRef.current;
 
         // --- Physics & Controls ---
+
+        // Speed Calculation
+        // Base speed 100, max speed 1000 (10x)
+        const warpFactor = 1 + speedRef.current * 9;
+        const currentSpeed = 100 * warpFactor;
+
+        // Auto Cruise (Always Forward)
+        velocity.current.z = -currentSpeed;
+
         if (isSupported) {
-            // Mobile
-            const ax = Math.abs(accel.x) > 0.5 ? accel.x : 0;
-            const ay = Math.abs(accel.y) > 0.5 ? accel.y : 0;
-            const az = Math.abs(accel.z) > 0.5 ? accel.z : 0;
+            // Mobile Gyro Control
 
-            velocity.current.x += ax * delta * 10;
-            velocity.current.y += ay * delta * 10;
-            velocity.current.z += az * delta * 10;
+            // Calibrate on first valid reading
+            if (!calibrated.current && orient.alpha !== 0) {
+                initialOrientation.current = { ...orient };
+                calibrated.current = true;
+            }
 
-            // Gyro Look
+            // Apply calibration offset if available
+            // This is a simplified calibration. For full 3D it's complex, 
+            // but for "looking forward" we can just use relative changes or subtract initial.
+            // Let's try using the joystick for offset ON TOP of gyro.
+
             const targetRotX = (orient.beta * Math.PI) / 180;
             const targetRotY = (orient.gamma * Math.PI) / 180;
-            camera.rotation.x = THREE.MathUtils.lerp(camera.rotation.x, targetRotX, 0.1);
-            camera.rotation.y = THREE.MathUtils.lerp(camera.rotation.y, targetRotY, 0.1);
-        } else {
-            // Auto Cruise (ALWAYS ON - HYPERSPEED)
-            velocity.current.z = -100; // Constant high speed forward
 
-            // Mouse Steer
-            const mouseX = (state.mouse.x * Math.PI) / 6;
-            const mouseY = (state.mouse.y * Math.PI) / 6;
-            camera.rotation.y = THREE.MathUtils.lerp(camera.rotation.y, -mouseX, 0.05);
-            camera.rotation.x = THREE.MathUtils.lerp(camera.rotation.x, -mouseY, 0.05);
+            // Mix Gyro + Joystick
+            // Joystick adds offset to the "center" look
+            const joyX = joystickRef.current.x * Math.PI; // Full 180 deg range
+            const joyY = joystickRef.current.y * Math.PI / 2; // 90 deg range
+
+            camera.rotation.x = THREE.MathUtils.lerp(camera.rotation.x, targetRotX + joyY, 0.1);
+            camera.rotation.y = THREE.MathUtils.lerp(camera.rotation.y, targetRotY - joyX, 0.1);
+
+        } else {
+            // Desktop / No Gyro
+
+            // Mouse Steer + Joystick Steer
+            const mouseX = (state.mouse.x * Math.PI) / 4;
+            const mouseY = (state.mouse.y * Math.PI) / 4;
+
+            const joyX = joystickRef.current.x * Math.PI;
+            const joyY = joystickRef.current.y * Math.PI / 2;
+
+            camera.rotation.y = THREE.MathUtils.lerp(camera.rotation.y, -mouseX - joyX, 0.05);
+            camera.rotation.x = THREE.MathUtils.lerp(camera.rotation.x, -mouseY + joyY, 0.05);
         }
 
         // Apply Velocity
@@ -834,12 +998,20 @@ const UniverseEngine = () => {
             {/* Space Dust & Warp Lines */}
             <group position={[camera.position.x, camera.position.y, camera.position.z]}>
                 <Sparkles count={2000} scale={1000} size={2} speed={0} opacity={0.5} color="#ffffff" />
-                <StarStreaks count={200} speed={200} length={20} size={0.2} color="#aaddff" />
-                <StarStreaks count={500} speed={150} length={10} size={0.1} color="#ffffff" opacity={0.4} />
+                <StarStreaks count={200} speed={200 * (1 + speedDisplay * 5)} length={20 * (1 + speedDisplay * 2)} size={0.2} color="#aaddff" />
+                <StarStreaks count={500} speed={150 * (1 + speedDisplay * 5)} length={10 * (1 + speedDisplay * 2)} size={0.1} color="#ffffff" opacity={0.4} />
             </group>
 
             {/* HUD Overlay */}
             {target && <HUD target={target} />}
+
+            {/* Controls Overlay */}
+            <Html fullscreen style={{ pointerEvents: 'none' }}>
+                <div className="absolute bottom-8 right-8 flex gap-8 items-end pointer-events-auto">
+                    <SpeedLever value={speedDisplay} onChange={handleSpeedChange} />
+                    <Joystick onMove={handleJoystickMove} />
+                </div>
+            </Html>
         </>
     );
 };
