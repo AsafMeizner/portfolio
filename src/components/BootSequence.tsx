@@ -83,12 +83,16 @@ export const BootSequence = ({ onComplete }: { onComplete: () => void }) => {
                     <div className="mb-8 text-center">
                         <pre className="text-[10px] md:text-xs leading-none text-cyan-600 mb-4 opacity-70">
                             {`
-   ___   ___   ___   ___ 
-  / _ \\ / __| / _ \\ | __|
- |  _/ | (__ | (_) || _| 
- |_|    \\___| \\___/ |_|  
+    ___    __  ___       ____  _____
+   /   |  /  |/  /      / __ \\/ ___/
+  / /| | / /|_/ /      / / / /\\__ \\ 
+ / ___ |/ /  / /      / /_/ /___/ / 
+/_/  |_/_/  /_/  _____\\____//____/  
+                /_____/             
  SYSTEM BOOT SEQUENCE V2.0
 `}
+
+
                         </pre>
                         <div className="h-px w-full bg-gradient-to-r from-transparent via-cyan-900 to-transparent" />
                     </div>
