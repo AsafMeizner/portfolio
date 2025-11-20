@@ -3,6 +3,9 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { Float, PerspectiveCamera, Stars, Sparkles, Trail } from '@react-three/drei';
 import * as THREE from 'three';
 import { EffectComposer, Bloom, ChromaticAberration, Scanline } from '@react-three/postprocessing';
+import { Maximize2 } from 'lucide-react';
+import { useGyroscope } from '../hooks/useGyroscope';
+import { GameModal } from './GameModal';
 
 // --- Game Constants ---
 const TUNNEL_LENGTH = 100;
@@ -126,6 +129,7 @@ const Tunnel = ({ speed }: { speed: number }) => {
 
 const GameLogic = ({ onGameOver, onScore }: { onGameOver: () => void, onScore: (s: number) => void }) => {
     const { mouse, viewport, camera } = useThree();
+    const { orientation, isSupported } = useGyroscope();
     const [shipPos, setShipPos] = useState<[number, number, number]>([0, 0, 0]);
     const [obstacles, setObstacles] = useState<{ x: number, y: number, z: number, rot: number }[]>([]);
     const [pickups, setPickups] = useState<{ x: number, y: number, z: number }[]>([]);
@@ -186,9 +190,17 @@ const GameLogic = ({ onGameOver, onScore }: { onGameOver: () => void, onScore: (
 
         const currentSpeed = isBoosting ? BOOST_SPEED : BASE_SPEED;
 
-        // Ship Movement
-        const targetX = (mouse.x * viewport.width) / 2.5;
-        const targetY = (mouse.y * viewport.height) / 2.5;
+        // Ship Movement - Use gyroscope on mobile, mouse on desktop
+        let targetX, targetY;
+        if (isSupported && Math.abs(orientation.gamma) > 5) {
+            // Mobile - gyroscope control
+            targetX = THREE.MathUtils.clamp((orientation.gamma / 45) * (viewport.width / 2.5), -(viewport.width / 2.5), (viewport.width / 2.5));
+            targetY = THREE.MathUtils.clamp(((orientation.beta - 45) / 45) * (viewport.height / 2.5), -(viewport.height / 2.5), (viewport.height / 2.5));
+        } else {
+            // Desktop - mouse control
+            targetX = (mouse.x * viewport.width) / 2.5;
+            targetY = (mouse.y * viewport.height) / 2.5;
+        }
 
         setShipPos(prev => [
             THREE.MathUtils.lerp(prev[0], targetX, 0.1),
@@ -278,6 +290,7 @@ const GameLogic = ({ onGameOver, onScore }: { onGameOver: () => void, onScore: (
 const CyberGame = () => {
     const [gameState, setGameState] = useState<'start' | 'playing' | 'gameover'>('start');
     const [score, setScore] = useState(0);
+    const [isFullscreen, setIsFullscreen] = useState(false);
 
     const handleScore = (points: number) => {
         if (gameState === 'playing') {
@@ -285,7 +298,7 @@ const CyberGame = () => {
         }
     };
 
-    return (
+    const gameContent = (
         <div className="w-full h-[600px] bg-black relative overflow-hidden rounded-xl border border-cyan-900/50 shadow-[0_0_50px_rgba(6,182,212,0.2)]">
             {/* UI Overlay */}
             <div className="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between p-8">
@@ -301,9 +314,20 @@ const CyberGame = () => {
                             </p>
                         )}
                     </div>
-                    <div className="text-right">
-                        <p className="text-4xl font-bold text-white font-mono">{score.toString().padStart(6, '0')}</p>
-                        <p className="text-slate-400 text-xs font-mono">SCORE</p>
+                    <div className="flex items-start gap-4">
+                        <div className="text-right">
+                            <p className="text-4xl font-bold text-white font-mono">{score.toString().padStart(6, '0')}</p>
+                            <p className="text-slate-400 text-xs font-mono">SCORE</p>
+                        </div>
+                        {!isFullscreen && (
+                            <button
+                                onClick={() => setIsFullscreen(true)}
+                                className="pointer-events-auto p-2 bg-slate-900/80 hover:bg-slate-800 border border-cyan-500/30 hover:border-cyan-500 rounded-lg transition-colors group"
+                                aria-label="Fullscreen"
+                            >
+                                <Maximize2 className="text-slate-400 group-hover:text-white transition-colors" size={20} />
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -352,6 +376,15 @@ const CyberGame = () => {
                 </EffectComposer>
             </Canvas>
         </div>
+    );
+
+    return (
+        <>
+            {gameContent}
+            <GameModal isOpen={isFullscreen} onClose={() => setIsFullscreen(false)}>
+                {gameContent}
+            </GameModal>
+        </>
     );
 };
 

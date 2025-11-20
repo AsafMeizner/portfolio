@@ -1,7 +1,9 @@
 import { useEffect, useRef } from 'react';
+import { useGyroscope } from '../hooks/useGyroscope';
 
 export const RobotCore = () => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const { orientation, isSupported } = useGyroscope();
 
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -24,11 +26,12 @@ export const RobotCore = () => {
 
         let angleX = 0, angleY = 0;
         let targetAngleX = 0, targetAngleY = 0;
+        let mouseTargetX = 0, mouseTargetY = 0;
 
         const handleMouseMove = (e: MouseEvent) => {
             const rect = canvas.getBoundingClientRect();
-            targetAngleY = (e.clientX - rect.left - width / 2) * 0.0005;
-            targetAngleX = (e.clientY - rect.top - height / 2) * 0.0005;
+            mouseTargetX = (e.clientX - rect.left - width / 2) * 0.0005;
+            mouseTargetY = (e.clientY - rect.top - height / 2) * 0.0005;
         };
 
         document.addEventListener('mousemove', handleMouseMove);
@@ -50,6 +53,17 @@ export const RobotCore = () => {
 
         const loop = () => {
             ctx.clearRect(0, 0, width, height);
+
+            // Blend gyroscope and mouse controls
+            if (isSupported && Math.abs(orientation.beta) > 0 && Math.abs(orientation.gamma) > 0) {
+                // Use gyroscope on mobile
+                targetAngleX = (orientation.beta / 90) * Math.PI * 0.5;
+                targetAngleY = (orientation.gamma / 90) * Math.PI * 0.5;
+            } else {
+                // Use mouse on desktop
+                targetAngleX = mouseTargetY;
+                targetAngleY = mouseTargetX;
+            }
 
             // Smooth Rotation Damping
             angleX += (targetAngleX - angleX) * 0.05;
@@ -105,7 +119,7 @@ export const RobotCore = () => {
             document.removeEventListener('mousemove', handleMouseMove);
             window.removeEventListener('resize', handleResize);
         };
-    }, []);
+    }, [orientation, isSupported]);
 
     return <canvas ref={canvasRef} className="w-full h-[400px]" />;
 };

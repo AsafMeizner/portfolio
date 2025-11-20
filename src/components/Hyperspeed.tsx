@@ -2,9 +2,11 @@ import { useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Points, PointMaterial } from '@react-three/drei';
 import * as THREE from 'three';
+import { useGyroscope } from '../hooks/useGyroscope';
 
 const StarField = (props: any) => {
     const ref = useRef<THREE.Points>(null);
+    const { orientation, isSupported } = useGyroscope();
 
     const [sphere] = useMemo(() => {
         const positions = new Float32Array(5000 * 3);
@@ -22,8 +24,18 @@ const StarField = (props: any) => {
 
     useFrame((_state, delta) => {
         if (ref.current) {
-            ref.current.rotation.x -= delta / 10;
-            ref.current.rotation.y -= delta / 15;
+            if (isSupported && Math.abs(orientation.beta) > 0 && Math.abs(orientation.gamma) > 0) {
+                // Use gyroscope on mobile
+                const targetX = (orientation.beta / 180) * Math.PI;
+                const targetY = (orientation.gamma / 180) * Math.PI;
+
+                ref.current.rotation.x += (targetX - ref.current.rotation.x) * 0.05;
+                ref.current.rotation.y += (targetY - ref.current.rotation.y) * 0.05;
+            } else {
+                // Default animation on desktop
+                ref.current.rotation.x -= delta / 10;
+                ref.current.rotation.y -= delta / 15;
+            }
         }
     });
 
