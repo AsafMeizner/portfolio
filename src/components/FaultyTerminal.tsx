@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 interface FaultyTerminalProps {
     text: string;
@@ -6,7 +6,7 @@ interface FaultyTerminalProps {
     trigger?: boolean;
 }
 
-const FaultyTerminal: React.FC<FaultyTerminalProps> = ({ text, className = '', trigger = true }) => {
+const FaultyTerminal = ({ text, className = '', trigger = true }: FaultyTerminalProps) => {
     const [displayText, setDisplayText] = useState(text);
     const [glitchActive, setGlitchActive] = useState(false);
     const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -22,10 +22,10 @@ const FaultyTerminal: React.FC<FaultyTerminalProps> = ({ text, className = '', t
         if (intervalRef.current) clearInterval(intervalRef.current);
 
         intervalRef.current = setInterval(() => {
-            setDisplayText(prev =>
+            setDisplayText(_prev =>
                 text
                     .split('')
-                    .map((char, index) => {
+                    .map((_char, index) => {
                         if (index < iterations) {
                             return text[index];
                         }

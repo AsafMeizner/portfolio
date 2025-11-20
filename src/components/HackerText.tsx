@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 export const useScrambleText = (text: string, speed: number = 30, trigger: boolean = true) => {
     const [displayText, setDisplayText] = useState(text);
@@ -10,8 +10,8 @@ export const useScrambleText = (text: string, speed: number = 30, trigger: boole
         let iterations = 0;
 
         const interval = setInterval(() => {
-            setDisplayText(prev =>
-                text.split("").map((char, index) => {
+            setDisplayText(_prev =>
+                text.split("").map((_char, index) => {
                     if (index < iterations) return text[index];
                     return chars[Math.floor(Math.random() * chars.length)];
                 }).join("")

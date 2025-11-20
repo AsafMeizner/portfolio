@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Terminal, Cpu, Wifi } from 'lucide-react';
 import { HackerText } from './HackerText';
 import { RobotCore } from './RobotCore';

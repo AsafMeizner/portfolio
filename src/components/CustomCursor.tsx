@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 export const useCustomCursor = () => {
     const [mousePos, setMousePos] = useState({ x: 0, y: 0 });

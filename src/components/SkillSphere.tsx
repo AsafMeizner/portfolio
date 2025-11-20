@@ -1,4 +1,4 @@
-import React, { useRef, useState, useMemo, useEffect } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Text, TrackballControls, Float } from '@react-three/drei';
 import * as THREE from 'three';
@@ -11,7 +11,6 @@ const skills = [
 ];
 
 const Word = ({ children, position }: { children: string, position: THREE.Vector3 }) => {
-    const fontUrl = 'https://fonts.gstatic.com/s/roboto/v18/KFOmCnqEu92Fr1Mu4mxK.woff'; // Standard font
     const ref = useRef<THREE.Mesh>(null);
     const [hovered, setHovered] = useState(false);
 

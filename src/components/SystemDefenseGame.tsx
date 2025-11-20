@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Shield, AlertTriangle, Play, MousePointer2 } from 'lucide-react';
 
 export const SystemDefenseGame = () => {

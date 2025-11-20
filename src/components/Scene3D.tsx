@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, Stars, MeshDistortMaterial, Sparkles, Torus, OrbitControls } from '@react-three/drei';
 import * as THREE from 'three';
@@ -35,7 +35,7 @@ const Core = () => {
 const Ring = ({ radius, speed, color, rotation }: { radius: number, speed: number, color: string, rotation: [number, number, number] }) => {
     const ref = useRef<THREE.Mesh>(null);
 
-    useFrame((state) => {
+    useFrame((_state) => {
         if (ref.current) {
             ref.current.rotation.z += speed * 0.01;
             ref.current.rotation.x += speed * 0.005;

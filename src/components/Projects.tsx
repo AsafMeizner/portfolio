@@ -66,7 +66,7 @@ const DeploymentLogLine = ({ text, delay, color }: { text: string, delay: number
     );
 };
 
-const ProjectCard = ({ project, index }: { project: Project, index: number }) => {
+const ProjectCard = ({ project }: { project: Project }) => {
     const [expanded, setExpanded] = useState(false);
 
     return (
@@ -197,8 +197,8 @@ export const Projects = () => {
 
                 {/* Projects Grid */}
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {projects.map((project, index) => (
-                        <ProjectCard key={project.id} project={project} index={index} />
+                    {projects.map((project, _index) => (
+                        <ProjectCard key={project.id} project={project} />
                     ))}
                 </div>
 

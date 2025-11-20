@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { BootSequence } from './components/BootSequence';
 import TargetCursor from './components/TargetCursor';
 import { Navbar } from './components/Navbar';

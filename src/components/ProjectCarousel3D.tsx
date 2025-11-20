@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { useState, useRef } from 'react';
+import { Canvas } from '@react-three/fiber';
 import { Image, Text, Float, useCursor } from '@react-three/drei';
 import * as THREE from 'three';
 import { useSpring, animated } from '@react-spring/three';

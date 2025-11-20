@@ -1,4 +1,4 @@
-import React from 'react';
+
 
 export const Navbar = ({ scrollTo }: { scrollTo: (id: string) => void }) => {
     return (

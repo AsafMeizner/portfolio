@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Mail, Github, Linkedin, Terminal as TerminalIcon, Send } from 'lucide-react';
+import { Mail, Github, Linkedin, Terminal as TerminalIcon } from 'lucide-react';
 import emailjs from '@emailjs/browser';
 
 export const Contact = () => {
