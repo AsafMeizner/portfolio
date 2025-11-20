@@ -3,40 +3,40 @@ import { Cpu, Database, Globe, Layout, Server, Wifi } from 'lucide-react';
 
 const skills = [
     {
-        name: 'Frontend Architecture',
+        name: 'Mobile & Cross-Platform',
         icon: Layout,
         color: 'text-cyan-400',
-        tech: ['React', 'TypeScript', 'Next.js', 'Tailwind CSS', 'Three.js', 'Framer Motion']
+        tech: ['Ionic', 'Capacitor', 'React', 'TypeScript', 'Electron', 'Cordova']
     },
     {
-        name: 'Backend Systems',
+        name: 'Backend & APIs',
         icon: Server,
         color: 'text-purple-400',
-        tech: ['Node.js', 'Python', 'Go', 'GraphQL', 'Redis', 'PostgreSQL']
+        tech: ['Flask', 'Python', 'Node.js', 'REST APIs', 'WebSockets', 'Express']
     },
     {
-        name: 'Database Design',
-        icon: Database,
-        color: 'text-emerald-400',
-        tech: ['MongoDB', 'PostgreSQL', 'Firebase', 'Prisma', 'Supabase']
-    },
-    {
-        name: 'Cloud Infrastructure',
-        icon: Globe,
-        color: 'text-blue-400',
-        tech: ['AWS', 'Docker', 'Kubernetes', 'Vercel', 'CI/CD Pipelines']
-    },
-    {
-        name: 'System Optimization',
+        name: 'Native Development',
         icon: Cpu,
-        color: 'text-rose-400',
-        tech: ['WebAssembly', 'Rust', 'Performance Profiling', 'SEO', 'Accessibility']
+        color: 'text-emerald-400',
+        tech: ['Android', 'iOS', 'Native Plugins', 'Java', 'Kotlin', 'Swift']
     },
     {
-        name: 'Network Security',
+        name: 'Networking & P2P',
         icon: Wifi,
+        color: 'text-blue-400',
+        tech: ['Wi-Fi Aware', 'P2P', 'Socket Programming', 'File Transfer', 'NAN Protocol']
+    },
+    {
+        name: 'FRC Robotics',
+        icon: Database,
+        color: 'text-rose-400',
+        tech: ['Java', 'WPILib', 'Scouting Systems', 'Data Analytics', 'Competition Strategy']
+    },
+    {
+        name: 'Web Technologies',
+        icon: Globe,
         color: 'text-amber-400',
-        tech: ['OAuth', 'JWT', 'Penetration Testing', 'HTTPS/SSL', 'Firewall Config']
+        tech: ['React', 'TypeScript', 'Tailwind CSS', 'Three.js', 'Vite', 'PWA']
     },
 ];
 

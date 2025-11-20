@@ -134,6 +134,8 @@ const ProjectCard = ({ project }: { project: Project }) => {
                     {project.github && (
                         <a
                             href={project.github}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="flex items-center gap-2 text-sm text-slate-500 hover:text-white transition-colors font-mono"
                         >
                             <Github size={16} />
@@ -143,6 +145,8 @@ const ProjectCard = ({ project }: { project: Project }) => {
                     {project.link && (
                         <a
                             href={project.link}
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="flex items-center gap-2 text-sm text-slate-500 hover:text-cyan-400 transition-colors font-mono"
                         >
                             <ExternalLink size={16} />

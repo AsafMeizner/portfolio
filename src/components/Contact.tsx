@@ -132,10 +132,10 @@ export const Contact = () => {
                     </button>
 
                     <div className="mt-16 flex justify-center gap-8 text-slate-500">
-                        <a href="https://github.com" target="_blank" rel="noopener noreferrer">
+                        <a href="https://github.com/AsafMeizner" target="_blank" rel="noopener noreferrer">
                             <Github className="hover:text-white cursor-pointer transition-colors" />
                         </a>
-                        <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer">
+                        <a href="https://linkedin.com/in/asaf-meizner" target="_blank" rel="noopener noreferrer">
                             <Linkedin className="hover:text-white cursor-pointer transition-colors" />
                         </a>
                     </div>
