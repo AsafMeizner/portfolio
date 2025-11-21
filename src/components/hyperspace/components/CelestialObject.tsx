@@ -3,6 +3,7 @@ import { useFrame, useThree, extend } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { CelestialBody } from '../types';
 import { PlanetShaderMaterial, StarShaderMaterial } from '../shaders';
+import { AsteroidBelt } from './AsteroidBelt';
 
 // Extend custom shaders
 extend({ PlanetShaderMaterial, StarShaderMaterial });
@@ -80,6 +81,8 @@ export const CelestialObject = ({ body, setTarget, shipPosition }: CelestialObje
         }
     });
 
+    const isRoot = body.type === 'star';
+
     // Handle Special Types (Rings, Belts)
     if (body.data.class === 'Ring') {
         return (
@@ -92,12 +95,20 @@ export const CelestialObject = ({ body, setTarget, shipPosition }: CelestialObje
         );
     }
 
-    if (body.data.class === 'Debris Field') {
-        // Rendered by AsteroidBelt component usually, but if passed here:
-        return null;
+    if (body.type === 'asteroid-belt') {
+        return (
+            <group ref={ref} position={isRoot ? undefined : body.position}>
+                {/* Render Asteroid Belt */}
+                <AsteroidBelt
+                    radius={body.orbitRadius || 100}
+                    width={body.radius || 20}
+                    count={800}
+                    size={0.5}
+                    color={body.color}
+                />
+            </group>
+        );
     }
-
-    const isRoot = body.type === 'star';
 
     return (
         <group>
@@ -138,7 +149,7 @@ export const CelestialObject = ({ body, setTarget, shipPosition }: CelestialObje
                         </mesh>
                         {/* Star Light */}
                         {body.type === 'star' && (
-                            <pointLight intensity={2} distance={500} decay={1} color={body.color} />
+                            <pointLight intensity={8} distance={1000} decay={0.8} color={body.color} castShadow={false} />
                         )}
                     </group>
 

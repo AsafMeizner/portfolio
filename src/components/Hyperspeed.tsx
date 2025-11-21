@@ -204,10 +204,16 @@ const Hyperspeed = () => {
                 <NebulaSkybox />
 
                 <EffectComposer>
-                    <Bloom luminanceThreshold={1.0} mipmapBlur intensity={1.5} radius={0.4} />
+                    <Bloom
+                        luminanceThreshold={0.2}
+                        mipmapBlur
+                        intensity={2.0}
+                        radius={0.8}
+                        levels={8}
+                    />
                     <ToneMapping />
-                    <Noise opacity={0.05} />
-                    <Vignette eskil={false} offset={0.1} darkness={0.5} />
+                    <Noise opacity={0.005} />
+                    <Vignette eskil={false} offset={0.1} darkness={0.6} />
                 </EffectComposer>
             </Canvas>
 

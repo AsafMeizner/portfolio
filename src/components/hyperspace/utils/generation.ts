@@ -74,10 +74,12 @@ export const generateSystem = (chunkX: number, chunkY: number, chunkZ: number): 
     };
 
     // Planets
-    const numPlanets = Math.floor(rng.range(1, 10));
+    const numPlanets = Math.floor(rng.range(3, 12)); // More planets!
+    let currentDist = starRadius + 100;
+
     for (let i = 0; i < numPlanets; i++) {
-        const dist = starRadius + 100 + (i * rng.range(50, 100));
-        const pRadius = rng.range(5, 15);
+        currentDist += rng.range(60, 150); // Incremental distance
+        const pRadius = rng.range(5, 20);
         const pType = Math.floor(rng.range(0, 4));
 
         let pColor = '#ffffff';
@@ -92,7 +94,7 @@ export const generateSystem = (chunkX: number, chunkY: number, chunkZ: number): 
             position: new THREE.Vector3(0, 0, 0), // Relative to star
             radius: pRadius,
             color: pColor,
-            orbitRadius: dist,
+            orbitRadius: currentDist,
             orbitSpeed: rng.range(0.05, 0.2) / (i + 1), // Slower further out
             orbitOffset: rng.range(0, Math.PI * 2),
             textureType: pType,
@@ -106,15 +108,15 @@ export const generateSystem = (chunkX: number, chunkY: number, chunkZ: number): 
         };
 
         // Moons
-        if (rng.next() > 0.5) {
-            const numMoons = Math.floor(rng.range(1, 5));
+        if (rng.next() > 0.4) {
+            const numMoons = Math.floor(rng.range(1, 6));
             for (let j = 0; j < numMoons; j++) {
-                const mDist = pRadius + 8 + (j * 4);
+                const mDist = pRadius + 8 + (j * 6);
                 planet.children?.push({
                     id: `moon-${planet.id}-${j}`,
                     type: 'moon',
                     position: new THREE.Vector3(0, 0, 0),
-                    radius: rng.range(1, 3),
+                    radius: rng.range(1, 4),
                     color: '#aaaaaa',
                     orbitRadius: mDist,
                     orbitSpeed: rng.range(0.5, 1.5),
@@ -141,18 +143,33 @@ export const generateSystem = (chunkX: number, chunkY: number, chunkZ: number): 
         star.children?.push(planet);
     }
 
-    // Asteroid Belt
-    if (rng.next() > 0.6) {
-        const beltDist = starRadius + rng.range(150, 300);
+    // Asteroid Belts (Inner and Outer)
+    // Inner Belt
+    if (rng.next() > 0.3) {
+        const beltDist = starRadius + rng.range(200, 300);
         star.children?.push({
-            id: `belt-${star.id}`,
-            type: 'planet', // Hack
+            id: `belt-inner-${star.id}`,
+            type: 'asteroid-belt',
             position: new THREE.Vector3(0, 0, 0),
-            radius: 0,
-            color: '#555',
-            orbitRadius: beltDist,
-            data: { name: 'Asteroid Belt', temp: '100K', mass: 'Unknown', class: 'Debris Field' }
-        } as any);
+            radius: 20, // Width
+            color: '#888888',
+            orbitRadius: beltDist, // Mean Radius
+            data: { name: 'Inner Asteroid Belt', temp: '150K', mass: 'Unknown', class: 'Asteroid Field' }
+        });
+    }
+
+    // Outer Belt (Kuiper-like)
+    if (rng.next() > 0.5) {
+        const beltDist = currentDist + rng.range(100, 200);
+        star.children?.push({
+            id: `belt-outer-${star.id}`,
+            type: 'asteroid-belt',
+            position: new THREE.Vector3(0, 0, 0),
+            radius: 40, // Width
+            color: '#556677',
+            orbitRadius: beltDist, // Mean Radius
+            data: { name: 'Outer Debris Field', temp: '30K', mass: 'Unknown', class: 'Kuiper Belt' }
+        });
     }
 
     return star;

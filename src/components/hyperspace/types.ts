@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-export type CelestialType = 'star' | 'planet' | 'moon';
+export type CelestialType = 'star' | 'planet' | 'moon' | 'asteroid-belt';
 
 export interface CelestialData {
     name: string;
