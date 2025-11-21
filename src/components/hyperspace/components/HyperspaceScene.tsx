@@ -213,13 +213,13 @@ export const HyperspaceScene = ({
         }
 
         // DEBUG LOGGING
-        if (Math.random() < 0.01) {
-            console.log('Input:', { w: keys.current.w, a: keys.current.a, s: keys.current.s, d: keys.current.d });
-            console.log('AngVel:', angularVelocity.current);
-            console.log('Speed:', speedRef.current);
-            console.log('isSupported:', isSupported);
-            console.log('CameraRot:', { x: camera.rotation.x, y: camera.rotation.y, z: camera.rotation.z });
-        }
+        // if (Math.random() < 0.01) {
+        //     console.log('Input:', { w: keys.current.w, a: keys.current.a, s: keys.current.s, d: keys.current.d });
+        //     console.log('AngVel:', angularVelocity.current);
+        //     console.log('Speed:', speedRef.current);
+        //     console.log('isSupported:', isSupported);
+        //     console.log('CameraRot:', { x: camera.rotation.x, y: camera.rotation.y, z: camera.rotation.z });
+        // }
 
         // Smooth Speed Interpolation
         // 0 to 1 mapped to 0 to MAX_SPEED
