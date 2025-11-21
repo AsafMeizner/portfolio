@@ -92,6 +92,9 @@ export const StarShaderMaterial = shaderMaterial(
         vec3 finalColor = color * brightness;
         finalColor += color * fresnel * 0.5; // Corona glow
         
+        // Clamp to prevent NaN values that cause black boxes with bloom
+        finalColor = clamp(finalColor, vec3(0.0), vec3(65504.0));
+        
         gl_FragColor = vec4(finalColor, 1.0);
     }
     `
@@ -104,7 +107,8 @@ export const PlanetShaderMaterial = shaderMaterial(
         type: 0, // 0: Rocky, 1: Gas, 2: Ice, 3: Volcanic
         lightDir: new THREE.Vector3(1, 0, 1),
         viewPos: new THREE.Vector3(0, 0, 0),
-        seed: 0
+        seed: 0,
+        opacity: 1.0
     },
     // Vertex
     `
@@ -128,6 +132,7 @@ export const PlanetShaderMaterial = shaderMaterial(
     uniform vec3 lightDir;
     uniform vec3 viewPos;
     uniform float seed;
+    uniform float opacity;
     
     varying vec2 vUv;
     varying vec3 vNormal;
@@ -203,7 +208,16 @@ export const PlanetShaderMaterial = shaderMaterial(
              finalColor += vec3(1.0, 0.2, 0.0) * cracks * 2.0;
         }
 
-        gl_FragColor = vec4(finalColor, 1.0);
+        // Clamp to prevent NaN values that cause black boxes with bloom
+        // See: https://github.com/mrdoob/three.js/issues/27878
+        finalColor = clamp(finalColor, vec3(0.0), vec3(65504.0));
+        
+        // Additional NaN safety check
+        if (any(isnan(finalColor))) {
+            finalColor = vec3(0.0);
+        }
+
+        gl_FragColor = vec4(finalColor, opacity);
     }
     `
 );

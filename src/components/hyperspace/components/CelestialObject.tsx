@@ -143,7 +143,7 @@ export const CelestialObject = ({ body, setTarget, shipPosition }: CelestialObje
                                     type={body.textureType || 0}
                                     seed={Math.random() * 100}
                                     transparent
-                                    opacity={opacity}
+                                    depthWrite={false}
                                 />
                             )}
                         </mesh>

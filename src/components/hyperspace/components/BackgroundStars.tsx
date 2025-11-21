@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import * as THREE from 'three';
 
 const StarPointShader = {
     vertexShader: `
@@ -66,6 +67,8 @@ export const BackgroundStars = ({ count = 2000 }) => {
                 args={[StarPointShader]}
                 transparent
                 depthWrite={false}
+                depthTest={false}
+                blending={THREE.AdditiveBlending}
             />
         </points>
     );
