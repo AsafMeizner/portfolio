@@ -1,24 +1,24 @@
+// Hyperspeed.tsx – Main entry for the hyperspace simulation
 import { useRef, useState, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { EffectComposer, Bloom, Noise, Vignette, ToneMapping } from '@react-three/postprocessing';
+import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGyroscope } from '../hooks/useGyroscope';
 import { RENDER_DISTANCE } from './hyperspace/settings';
 import { HyperspaceScene } from './hyperspace/components/HyperspaceScene';
 import { NebulaSkybox } from './hyperspace/components/NebulaSkybox';
 
-// --- UI Controls (External) ---
-
+// ---------------------------------------------------------------------------
+// UI Controls – Joystick
+// ---------------------------------------------------------------------------
 const Joystick = ({ onMove }: { onMove: (x: number, y: number) => void }) => {
     const stickRef = useRef<HTMLDivElement>(null);
     const baseRef = useRef<HTMLDivElement>(null);
     const [active, setActive] = useState(false);
     const [pos, setPos] = useState({ x: 0, y: 0 });
 
-    const handleStart = () => {
-        setActive(true);
-    };
-
+    const handleStart = () => setActive(true);
     const handleEnd = () => {
         setActive(false);
         setPos({ x: 0, y: 0 });
@@ -30,36 +30,30 @@ const Joystick = ({ onMove }: { onMove: (x: number, y: number) => void }) => {
         const base = baseRef.current.getBoundingClientRect();
         const centerX = base.left + base.width / 2;
         const centerY = base.top + base.height / 2;
-
         const maxDist = base.width / 2;
-
         let dx = clientX - centerX;
         let dy = clientY - centerY;
         const dist = Math.sqrt(dx * dx + dy * dy);
-
         if (dist > maxDist) {
             const angle = Math.atan2(dy, dx);
             dx = Math.cos(angle) * maxDist;
             dy = Math.sin(angle) * maxDist;
         }
-
         setPos({ x: dx, y: dy });
         onMove(dx / maxDist, dy / maxDist);
     };
 
-    // Event listeners attached to window to handle drag outside the element
+    // Global listeners for dragging outside the joystick area
     useEffect(() => {
-        const onTouchMove = (e: TouchEvent) => { if (active) handleMove(e.touches[0].clientX, e.touches[0].clientY); };
-        const onMouseMove = (e: MouseEvent) => { if (active) handleMove(e.clientX, e.clientY); };
-        const onUp = () => { if (active) handleEnd(); };
-
+        const onTouchMove = (e: TouchEvent) => active && handleMove(e.touches[0].clientX, e.touches[0].clientY);
+        const onMouseMove = (e: MouseEvent) => active && handleMove(e.clientX, e.clientY);
+        const onUp = () => active && handleEnd();
         if (active) {
             window.addEventListener('touchmove', onTouchMove);
             window.addEventListener('touchend', onUp);
             window.addEventListener('mousemove', onMouseMove);
             window.addEventListener('mouseup', onUp);
         }
-
         return () => {
             window.removeEventListener('touchmove', onTouchMove);
             window.removeEventListener('touchend', onUp);
@@ -84,7 +78,10 @@ const Joystick = ({ onMove }: { onMove: (x: number, y: number) => void }) => {
     );
 };
 
-const SpeedLever = ({ value, currentValue, onChange }: { value: number, currentValue: number, onChange: (v: number) => void }) => {
+// ---------------------------------------------------------------------------
+// UI Controls – Speed Lever
+// ---------------------------------------------------------------------------
+const SpeedLever = ({ value, currentValue, onChange }: { value: number; currentValue: number; onChange: (v: number) => void }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [dragging, setDragging] = useState(false);
 
@@ -93,23 +90,20 @@ const SpeedLever = ({ value, currentValue, onChange }: { value: number, currentV
         const rect = containerRef.current.getBoundingClientRect();
         const height = rect.height;
         const relativeY = Math.max(0, Math.min(height, clientY - rect.top));
-        // Invert: Bottom is 0, Top is 1
-        const newVal = 1 - (relativeY / height);
+        const newVal = 1 - relativeY / height; // invert: bottom = 0, top = 1
         onChange(newVal);
     };
 
     useEffect(() => {
-        const onTouchMove = (e: TouchEvent) => { if (dragging) handleMove(e.touches[0].clientY); };
-        const onMouseMove = (e: MouseEvent) => { if (dragging) handleMove(e.clientY); };
+        const onTouchMove = (e: TouchEvent) => dragging && handleMove(e.touches[0].clientY);
+        const onMouseMove = (e: MouseEvent) => dragging && handleMove(e.clientY);
         const onUp = () => setDragging(false);
-
         if (dragging) {
             window.addEventListener('touchmove', onTouchMove);
             window.addEventListener('touchend', onUp);
             window.addEventListener('mousemove', onMouseMove);
             window.addEventListener('mouseup', onUp);
         }
-
         return () => {
             window.removeEventListener('touchmove', onTouchMove);
             window.removeEventListener('touchend', onUp);
@@ -120,35 +114,25 @@ const SpeedLever = ({ value, currentValue, onChange }: { value: number, currentV
 
     return (
         <div className="flex flex-col items-center gap-2 pointer-events-auto">
-            <div className="text-cyan-300 font-mono text-xs font-bold bg-black/90 px-2 rounded border border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.3)]">WARP</div>
+            <div className="text-cyan-300 font-mono text-xs font-bold bg-black/90 px-2 rounded border border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.3)]">
+                WARP
+            </div>
             <div
                 ref={containerRef}
                 className="w-12 h-48 bg-black/90 border-2 border-cyan-300 rounded-full relative overflow-hidden cursor-pointer touch-none shadow-[0_0_40px_rgba(34,211,238,0.5)]"
-                onMouseDown={(e) => { setDragging(true); handleMove(e.clientY); }}
-                onTouchStart={(e) => { setDragging(true); handleMove(e.touches[0].clientY); }}
+                onMouseDown={e => { setDragging(true); handleMove(e.clientY); }}
+                onTouchStart={e => { setDragging(true); handleMove(e.touches[0].clientY); }}
             >
                 {/* Target Speed Bar (Dimmer) */}
-                <div
-                    className="absolute bottom-0 left-0 w-full bg-cyan-900/50 transition-all duration-75"
-                    style={{ height: `${value * 100}%` }}
-                />
-
+                <div className="absolute bottom-0 left-0 w-full bg-cyan-900/50 transition-all duration-75" style={{ height: `${value * 100}%` }} />
                 {/* Actual Speed Bar (Bright) */}
-                <div
-                    className="absolute bottom-0 left-1/4 w-1/2 bg-gradient-to-t from-cyan-500 to-white shadow-[0_0_20px_rgba(34,211,238,0.8)]"
-                    style={{ height: `${currentValue * 100}%` }}
-                />
-
+                <div className="absolute bottom-0 left-1/4 w-1/2 bg-gradient-to-t from-cyan-500 to-white shadow-[0_0_20px_rgba(34,211,238,0.8)]" style={{ height: `${currentValue * 100}%` }} />
                 {/* Ticks */}
                 {[...Array(9)].map((_, i) => (
                     <div key={i} className="absolute w-full h-[1px] bg-cyan-200/40" style={{ bottom: `${(i + 1) * 10}%` }} />
                 ))}
-
                 {/* Target Indicator Line */}
-                <div
-                    className="absolute w-full h-[2px] bg-cyan-300 shadow-[0_0_10px_rgba(34,211,238,1)] transition-all duration-75"
-                    style={{ bottom: `${value * 100}%` }}
-                />
+                <div className="absolute w-full h-[2px] bg-cyan-300 shadow-[0_0_10px_rgba(34,211,238,1)] transition-all duration-75" style={{ bottom: `${value * 100}%` }} />
             </div>
             <div className="flex flex-col items-center gap-1">
                 <div className="text-cyan-300 font-mono text-xs font-bold bg-black/90 px-2 rounded border border-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.3)]">
@@ -162,14 +146,23 @@ const SpeedLever = ({ value, currentValue, onChange }: { value: number, currentV
     );
 };
 
-const Hyperspeed = () => {
+// ---------------------------------------------------------------------------
+// Main Hyperspeed component
+// ---------------------------------------------------------------------------
+export const Hyperspeed = () => {
     const { isSupported } = useGyroscope();
 
-    // Lift state up for UI controls
+    // Shared refs for controls
     const joystickRef = useRef({ x: 0, y: 0 });
-    const speedRef = useRef(0.1); // 0 to 1, default 0.1
-    const [speedDisplay, setSpeedDisplay] = useState(0.1); // For UI updates
-    const [currentSpeed, setCurrentSpeed] = useState(0.1); // Actual Speed (0-1)
+    const speedRef = useRef(0.1);
+    const [speedDisplay, setSpeedDisplay] = useState(0.1);
+    const [currentSpeed, setCurrentSpeed] = useState(0.1);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const timer = setTimeout(() => setLoading(false), 500);
+        return () => clearTimeout(timer);
+    }, []);
 
     const handleSpeedChange = (v: number) => {
         speedRef.current = v;
@@ -181,19 +174,17 @@ const Hyperspeed = () => {
     };
 
     return (
-        <div className="absolute inset-0 z-0 bg-[#020617]">
+        <div className="absolute inset-0 bg-[#020617]">
             <Canvas
                 shadows
-                dpr={[1, 2]}
-                gl={{ antialias: false, toneMapping: THREE.ReinhardToneMapping, toneMappingExposure: 1.5 }}
+                dpr={[1, 1.5]}
+                gl={{ antialias: true, toneMapping: THREE.ReinhardToneMapping, toneMappingExposure: 1.2 }}
                 camera={{ position: [0, 0, 5], fov: 75, near: 0.1, far: 20000 }}
             >
                 <fog attach="fog" args={['#000000', RENDER_DISTANCE * 0.5, RENDER_DISTANCE]} />
-
                 {/* Lighting */}
-                <ambientLight intensity={0.1} />
-                <hemisphereLight args={['#ffffff', '#000000', 0.2]} />
-
+                <ambientLight intensity={0.08} />
+                <hemisphereLight args={['#ffffff', '#000000', 0.15]} />
                 <HyperspaceScene
                     speedDisplay={speedDisplay}
                     setSpeedDisplay={setSpeedDisplay}
@@ -202,19 +193,17 @@ const Hyperspeed = () => {
                     speedRef={speedRef}
                 />
                 <NebulaSkybox />
-
                 <EffectComposer>
-                    <Bloom
-                        luminanceThreshold={0.2}
-                        mipmapBlur
-                        intensity={2.0}
-                        radius={0.8}
-                        levels={8}
-                    />
+                    <Bloom luminanceThreshold={0.25} mipmapBlur intensity={1.0} radius={0.6} levels={5} />
                     <ToneMapping />
-                    <Noise opacity={0.005} />
-                    <Vignette eskil={false} offset={0.1} darkness={0.6} />
+                    <Noise opacity={0.002} />
+                    <Vignette eskil={false} offset={0.1} darkness={0.5} />
                 </EffectComposer>
+                {loading && (
+                    <Html center>
+                        <div className="text-cyan-300 font-mono text-2xl" style={{ textShadow: '0 0 10px rgba(34,211,238,0.8)' }}>LOADING…</div>
+                    </Html>
+                )}
             </Canvas>
 
             {/* UI Overlay - OUTSIDE CANVAS */}
@@ -241,8 +230,8 @@ const Hyperspeed = () => {
 
             {/* Crosshair */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-90 z-40">
-                <div className="w-8 h-8 border-2 border-cyan-300 rounded-full shadow-[0_0_20px_rgba(34,211,238,0.8)]"></div>
-                <div className="w-1 h-1 bg-cyan-300 rounded-full absolute shadow-[0_0_10px_rgba(34,211,238,1)]"></div>
+                <div className="w-8 h-8 border-2 border-cyan-300 rounded-full shadow-[0_0_20px_rgba(34,211,238,0.8)]" />
+                <div className="w-1 h-1 bg-cyan-300 rounded-full absolute shadow-[0_0_10px_rgba(34,211,238,1)]" />
             </div>
         </div>
     );
