@@ -1,9 +1,10 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useMemo } from 'react';
 import { useFrame, useThree, extend } from '@react-three/fiber';
 import * as THREE from 'three';
 import type { CelestialBody } from '../types';
 import { PlanetShaderMaterial, StarShaderMaterial } from '../shaders';
 import { AsteroidBelt } from './AsteroidBelt';
+import { LOD_THRESHOLDS, LOD_SETTINGS } from '../settings';
 
 // Extend custom shaders
 extend({ PlanetShaderMaterial, StarShaderMaterial });
@@ -12,14 +13,22 @@ interface CelestialObjectProps {
     body: CelestialBody;
     setTarget: (b: CelestialBody) => void;
     shipPosition: THREE.Vector3;
+    speed: number; // Normalized speed 0-1 for LOD calculations
 }
 
-export const CelestialObject = ({ body, setTarget, shipPosition }: CelestialObjectProps) => {
+export const CelestialObject = ({ body, setTarget, shipPosition, speed }: CelestialObjectProps) => {
     const ref = useRef<THREE.Group>(null);
     const meshRef = useRef<THREE.Mesh>(null);
     const materialRef = useRef<any>(null);
     const { camera } = useThree();
 
+    // Calculate LOD based on speed
+    const lodLevel = useMemo(() => {
+        if (speed < LOD_THRESHOLDS.LOW_SPEED) return LOD_SETTINGS.FULL_DETAIL;
+        if (speed < LOD_THRESHOLDS.MEDIUM_SPEED) return LOD_SETTINGS.MEDIUM_DETAIL;
+        if (speed < LOD_THRESHOLDS.HIGH_SPEED) return LOD_SETTINGS.LOW_DETAIL;
+        return LOD_SETTINGS.MINIMAL_DETAIL;
+    }, [speed]);
 
     const [opacity, setOpacity] = useState(0);
 
@@ -131,7 +140,7 @@ export const CelestialObject = ({ body, setTarget, shipPosition }: CelestialObje
                             onPointerOver={(e) => { e.stopPropagation(); document.body.style.cursor = 'pointer'; }}
                             onPointerOut={() => { document.body.style.cursor = 'auto'; }}
                         >
-                            <sphereGeometry args={[body.radius, 64, 64]} />
+                            <sphereGeometry args={[body.radius, lodLevel.geometrySegments, lodLevel.geometrySegments]} />
                             {body.type === 'star' ? (
                                 // @ts-ignore
                                 <starShaderMaterial ref={materialRef} color={new THREE.Color(body.color)} noiseScale={1.0} transparent opacity={opacity} />
@@ -154,12 +163,13 @@ export const CelestialObject = ({ body, setTarget, shipPosition }: CelestialObje
                     </group>
 
                     {/* Children (Recursion) - Rendered relative to THIS body */}
-                    {body.children?.map(child => (
+                    {lodLevel.enableChildren && body.children?.map(child => (
                         <CelestialObject
                             key={child.id}
                             body={child}
                             setTarget={setTarget}
                             shipPosition={shipPosition}
+                            speed={speed}
                         />
                     ))}
                 </group>

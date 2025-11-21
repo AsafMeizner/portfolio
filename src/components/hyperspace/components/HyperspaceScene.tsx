@@ -3,7 +3,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useGyroscope } from '../../../hooks/useGyroscope';
 import type { CelestialBody } from '../types';
-import { CHUNK_SIZE, PHYSICS } from '../settings';
+import { CHUNK_SIZE, PHYSICS, DIRECTIONAL_LOADING } from '../settings';
 import { generateSystem } from '../utils/generation';
 import { CelestialObject } from './CelestialObject';
 import { StarStreaks } from './StarStreaks';
@@ -317,13 +317,47 @@ export const HyperspaceScene = ({
 
             lastChunk.current.set(currentChunkX, currentChunkY, currentChunkZ);
 
-            // Generate new systems in radius
+            // Directional Loading: Prioritize forward chunks at high speed
+            const useDirectionalLoading = speedRef.current >= DIRECTIONAL_LOADING.ENABLE_AT_SPEED;
+
+            // Calculate forward vector in world space
+            const forward = new THREE.Vector3(0, 0, -1);
+            forward.applyQuaternion(camera.quaternion).normalize();
+
             const newSystems: CelestialBody[] = [];
-            for (let x = currentChunkX - 1; x <= currentChunkX + 1; x++) {
-                for (let y = currentChunkY - 1; y <= currentChunkY + 1; y++) {
-                    for (let z = currentChunkZ - 1; z <= currentChunkZ + 1; z++) {
-                        const sys = generateSystem(x, y, z);
-                        if (sys) newSystems.push(sys);
+
+            if (useDirectionalLoading) {
+                // High speed: Load more chunks ahead, fewer to the sides
+                const forwardRange = Math.ceil(DIRECTIONAL_LOADING.FORWARD_DISTANCE_MULTIPLIER);
+                const lateralRange = Math.max(1, Math.floor(DIRECTIONAL_LOADING.LATERAL_REDUCTION));
+
+                // Generate chunks with bias toward forward direction
+                for (let x = currentChunkX - lateralRange; x <= currentChunkX + lateralRange; x++) {
+                    for (let y = currentChunkY - lateralRange; y <= currentChunkY + lateralRange; y++) {
+                        for (let z = currentChunkZ - lateralRange; z <= currentChunkZ + lateralRange; z++) {
+                            const sys = generateSystem(x, y, z);
+                            if (sys) newSystems.push(sys);
+                        }
+                    }
+                }
+
+                // Add extra forward chunks based on direction
+                const steps = forwardRange * 2;
+                for (let i = 2; i <= steps; i++) {
+                    const fwdX = Math.round(currentChunkX + forward.x * i);
+                    const fwdY = Math.round(currentChunkY + forward.y * i);
+                    const fwdZ = Math.round(currentChunkZ + forward.z * i);
+                    const sys = generateSystem(fwdX, fwdY, fwdZ);
+                    if (sys) newSystems.push(sys);
+                }
+            } else {
+                // Normal speed: Generate standard 3x3x3 chunk grid
+                for (let x = currentChunkX - 1; x <= currentChunkX + 1; x++) {
+                    for (let y = currentChunkY - 1; y <= currentChunkY + 1; y++) {
+                        for (let z = currentChunkZ - 1; z <= currentChunkZ + 1; z++) {
+                            const sys = generateSystem(x, y, z);
+                            if (sys) newSystems.push(sys);
+                        }
                     }
                 }
             }
@@ -339,6 +373,7 @@ export const HyperspaceScene = ({
                     body={sys}
                     setTarget={setTarget}
                     shipPosition={shipPosition.current}
+                    speed={speedRef.current}
                 />
             ))}
 
