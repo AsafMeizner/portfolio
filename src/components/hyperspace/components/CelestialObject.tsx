@@ -114,6 +114,9 @@ export const CelestialObject = ({ body, setTarget, shipPosition, speed }: Celest
                     count={800}
                     size={0.5}
                     color={body.color}
+                    arcLength={body.data.arcLength || 1.0}
+                    beltSpeed={body.data.beltSpeed || 0.02}
+                    beltOffset={body.data.beltOffset || 0}
                 />
             </group>
         );

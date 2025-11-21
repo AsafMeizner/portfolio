@@ -144,9 +144,32 @@ export const generateSystem = (chunkX: number, chunkY: number, chunkZ: number): 
     }
 
     // Asteroid Belts (Inner and Outer)
-    // Inner Belt
+    // Inner Belt - Varied configurations
     if (rng.next() > 0.3) {
         const beltDist = starRadius + rng.range(200, 300);
+        const beltType = rng.next();
+
+        let arcLength: number;
+        let beltSpeed: number;
+        let beltName: string;
+
+        if (beltType > 0.7) {
+            // Thin strip moving quickly
+            arcLength = rng.range(0.08, 0.15); // ~30-55° arc
+            beltSpeed = rng.range(0.08, 0.15);
+            beltName = 'Asteroid Stream';
+        } else if (beltType > 0.4) {
+            // Partial ring moving moderately
+            arcLength = rng.range(0.25, 0.5); // ~90-180° arc
+            beltSpeed = rng.range(0.04, 0.08);
+            beltName = 'Partial Belt';
+        } else {
+            // Full traditional belt moving slowly
+            arcLength = 1.0; // Full 360° orbit
+            beltSpeed = rng.range(0.01, 0.03);
+            beltName = 'Asteroid Belt';
+        }
+
         star.children?.push({
             id: `belt-inner-${star.id}`,
             type: 'asteroid-belt',
@@ -154,13 +177,44 @@ export const generateSystem = (chunkX: number, chunkY: number, chunkZ: number): 
             radius: 20, // Width
             color: '#888888',
             orbitRadius: beltDist, // Mean Radius
-            data: { name: 'Inner Asteroid Belt', temp: '150K', mass: 'Unknown', class: 'Asteroid Field' }
+            data: {
+                name: `Inner ${beltName}`,
+                temp: '150K',
+                mass: 'Unknown',
+                class: 'Asteroid Field',
+                arcLength,
+                beltSpeed,
+                beltOffset: rng.range(0, Math.PI * 2) // Random starting position
+            }
         });
     }
 
-    // Outer Belt (Kuiper-like)
+    // Outer Belt (Kuiper-like) - Varied configurations
     if (rng.next() > 0.5) {
         const beltDist = currentDist + rng.range(100, 200);
+        const beltType = rng.next();
+
+        let arcLength: number;
+        let beltSpeed: number;
+        let beltName: string;
+
+        if (beltType > 0.7) {
+            // Thin debris stream
+            arcLength = rng.range(0.08, 0.15); // ~30-55° arc
+            beltSpeed = rng.range(0.05, 0.10);
+            beltName = 'Debris Stream';
+        } else if (beltType > 0.4) {
+            // Partial ring
+            arcLength = rng.range(0.25, 0.5); // ~90-180° arc
+            beltSpeed = rng.range(0.02, 0.05);
+            beltName = 'Debris Arc';
+        } else {
+            // Full traditional belt
+            arcLength = 1.0; // Full 360° orbit
+            beltSpeed = rng.range(0.005, 0.02);
+            beltName = 'Kuiper Belt';
+        }
+
         star.children?.push({
             id: `belt-outer-${star.id}`,
             type: 'asteroid-belt',
@@ -168,7 +222,15 @@ export const generateSystem = (chunkX: number, chunkY: number, chunkZ: number): 
             radius: 40, // Width
             color: '#556677',
             orbitRadius: beltDist, // Mean Radius
-            data: { name: 'Outer Debris Field', temp: '30K', mass: 'Unknown', class: 'Kuiper Belt' }
+            data: {
+                name: `Outer ${beltName}`,
+                temp: '30K',
+                mass: 'Unknown',
+                class: 'Kuiper Belt',
+                arcLength,
+                beltSpeed,
+                beltOffset: rng.range(0, Math.PI * 2) // Random starting position
+            }
         });
     }
 

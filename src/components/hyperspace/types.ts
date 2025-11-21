@@ -7,6 +7,10 @@ export interface CelestialData {
     temp: string;
     mass: string;
     class: string;
+    // Asteroid belt configuration
+    arcLength?: number; // Fraction of orbit covered (0-1)
+    beltSpeed?: number; // Speed of belt rotation around orbit
+    beltOffset?: number; // Initial angular offset in radians
 }
 
 export interface CelestialBody {
