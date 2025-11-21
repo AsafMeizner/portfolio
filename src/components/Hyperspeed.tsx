@@ -71,8 +71,12 @@ const Joystick = ({ onMove }: { onMove: (x: number, y: number) => void }) => {
         >
             <div
                 ref={stickRef}
-                className="w-12 h-12 rounded-full bg-cyan-400 shadow-[0_0_25px_rgba(34,211,238,1)] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none transition-transform duration-75 border-2 border-white"
-                style={{ transform: `translate(${pos.x}px, ${pos.y}px) translate(-50%, -50%)` }}
+                className="w-12 h-12 rounded-full bg-cyan-400 shadow-[0_0_25px_rgba(34,211,238,1)] absolute pointer-events-none transition-transform duration-75 border-2 border-white"
+                style={{
+                    left: '50%',
+                    top: '50%',
+                    transform: `translate(calc(-50% + ${pos.x}px), calc(-50% + ${pos.y}px))`
+                }}
             />
         </div>
     );

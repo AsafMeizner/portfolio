@@ -1,34 +1,54 @@
 import { Html } from '@react-three/drei';
+import { useEffect } from 'react';
 import * as THREE from 'three';
 import type { CelestialBody } from '../types';
 
 interface HUDProps {
     target: CelestialBody | null;
     onClose: () => void;
+    shipPosition: THREE.Vector3;
 }
 
-export const HUD = ({ target, onClose }: HUDProps) => {
+export const HUD = ({ target, onClose, shipPosition }: HUDProps) => {
     if (!target) return null;
+
+    // Reset cursor when HUD unmounts to prevent stuck pointer cursor
+    useEffect(() => {
+        return () => {
+            document.body.style.cursor = 'auto';
+        };
+    }, []);
+
+    // Calculate position relative to camera (camera-centric rendering)
+    let displayPosition: THREE.Vector3;
+
+    if (target.type === 'star') {
+        // For stars, position is already world position, subtract ship position
+        displayPosition = target.position.clone().sub(shipPosition);
+    } else {
+        // For planets/moons, we need to get their world position
+        // They are rendered relative to their parent, so we just use their current position
+        displayPosition = target.position.clone();
+    }
 
     return (
         <Html
-            position={[target.position.x, target.position.y, target.position.z]}
+            position={displayPosition}
             center
             zIndexRange={[100, 0]}
-            occlude
-            onOcclude={(hidden) => {
-                const el = document.getElementById(`hud-${target.id}`);
-                if (el) el.style.opacity = hidden ? '0' : '1';
-            }}
+            style={{ pointerEvents: 'auto' }}
         >
             <div
                 id={`hud-${target.id}`}
-                className="w-64 bg-black/80 border border-cyan-500/50 p-4 rounded-lg backdrop-blur-md text-cyan-400 font-mono text-sm pointer-events-auto select-none transition-opacity duration-200"
-                style={{ minWidth: '200px' }}
+                className="w-80 bg-black/90 border-2 border-cyan-500 p-5 rounded-lg backdrop-blur-md text-cyan-400 font-mono text-base pointer-events-auto select-none shadow-[0_0_30px_rgba(6,182,212,0.5)]"
+                style={{ minWidth: '280px' }}
             >
                 <button
-                    onClick={onClose}
-                    className="absolute top-2 right-2 text-cyan-600 hover:text-cyan-300"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        onClose();
+                    }}
+                    className="absolute top-2 right-2 text-cyan-600 hover:text-cyan-300 w-6 h-6 flex items-center justify-center"
                 >
                     ✕
                 </button>
@@ -40,7 +60,7 @@ export const HUD = ({ target, onClose }: HUDProps) => {
                     <div className="flex justify-between"><span>CLASS:</span> <span className="text-white">{target.data.class}</span></div>
                     <div className="flex justify-between"><span>TEMP:</span> <span className="text-white">{target.data.temp}</span></div>
                     <div className="flex justify-between"><span>MASS:</span> <span className="text-white">{target.data.mass}</span></div>
-                    <div className="flex justify-between"><span>DIST:</span> <span className="text-white">{Math.floor(target.position.distanceTo(new THREE.Vector3(0, 0, 0)))} LY</span></div>
+                    <div className="flex justify-between"><span>DIST:</span> <span className="text-white">{Math.floor(displayPosition.length())} LY</span></div>
                 </div>
                 <div className="mt-2 text-[10px] text-cyan-600 animate-pulse">
                     SCANNING... DATA STREAM ACTIVE

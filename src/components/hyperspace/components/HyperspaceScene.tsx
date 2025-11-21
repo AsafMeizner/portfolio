@@ -253,7 +253,7 @@ export const HyperspaceScene = ({
         const inputZ = keyZ;
 
         // Physics-based Rotation (Acceleration + Drag)
-        const ACCEL = 15.0;
+        const ACCEL = 8.0; // Reduced from 15.0 for slower rotation
         const DRAG = 0.90;
 
         // Apply Acceleration
@@ -285,7 +285,7 @@ export const HyperspaceScene = ({
             // Desktop / Manual Mode - LOCAL ROTATION using QUATERNIONS
             // Create a rotation quaternion for this frame based on angular velocity
             const q = new THREE.Quaternion();
-            const ROTATION_MULTIPLIER = 2.5;
+            const ROTATION_MULTIPLIER = 1.5; // Reduced from 2.5 for slower rotation
             q.setFromEuler(new THREE.Euler(
                 angularVelocity.current.x * delta * PHYSICS.ROTATION_SPEED * ROTATION_MULTIPLIER,
                 angularVelocity.current.y * delta * PHYSICS.ROTATION_SPEED * ROTATION_MULTIPLIER,
@@ -387,7 +387,7 @@ export const HyperspaceScene = ({
             </group>
 
             {/* HUD Overlay */}
-            {target && <HUD target={target} onClose={() => setTarget(null)} />}
+            {target && <HUD target={target} onClose={() => setTarget(null)} shipPosition={shipPosition.current} />}
         </>
     );
 };
