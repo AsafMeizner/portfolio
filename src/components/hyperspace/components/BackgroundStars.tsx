@@ -1,6 +1,4 @@
-import { useMemo, useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
-import * as THREE from 'three';
+import { useMemo } from 'react';
 
 const StarPointShader = {
     vertexShader: `

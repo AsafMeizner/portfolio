@@ -19,7 +19,7 @@ export const CelestialObject = ({ body, setTarget, shipPosition }: CelestialObje
     const meshRef = useRef<THREE.Mesh>(null);
     const materialRef = useRef<any>(null);
     const { camera } = useThree();
-    const [hovered, setHovered] = useState(false);
+
 
     const [opacity, setOpacity] = useState(0);
 
