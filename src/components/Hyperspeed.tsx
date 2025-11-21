@@ -5,6 +5,7 @@ import { EffectComposer, Bloom, Noise, Vignette, ToneMapping } from '@react-thre
 import { Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { useGyroscope } from '../hooks/useGyroscope';
+import { usePortrait } from '../hooks/usePortrait';
 import { RENDER_DISTANCE } from './hyperspace/settings';
 import { HyperspaceScene } from './hyperspace/components/HyperspaceScene';
 import { NebulaSkybox } from './hyperspace/components/NebulaSkybox';
@@ -155,6 +156,7 @@ const SpeedLever = ({ value, currentValue, onChange }: { value: number; currentV
 // ---------------------------------------------------------------------------
 export const Hyperspeed = () => {
     const { isSupported } = useGyroscope();
+    const isPortrait = usePortrait();
 
     // Shared refs for controls
     const joystickRef = useRef({ x: 0, y: 0 });
@@ -211,26 +213,30 @@ export const Hyperspeed = () => {
             </Canvas>
 
             {/* UI Overlay - OUTSIDE CANVAS */}
-            <div className="absolute bottom-8 left-8 pointer-events-none z-50">
-                <div className="text-cyan-300 font-mono text-xs bg-black/90 p-4 rounded-lg backdrop-blur-md border-2 border-cyan-400 shadow-[0_0_30px_rgba(34,211,238,0.4)]">
-                    <p className="font-bold text-lg mb-1 text-cyan-200 shadow-cyan-500/50 drop-shadow-md">SYSTEM STATUS</p>
-                    <p>MODE: <span className="text-white font-bold drop-shadow-sm">{isSupported ? 'GYRO_FLIGHT' : 'MANUAL_OVERRIDE'}</span></p>
-                    <p>SECTOR: <span className="text-white font-bold drop-shadow-sm">UNCHARTED</span></p>
-                    <div className="mt-2 text-[10px] text-cyan-400 font-bold">
-                        CONTROLS:<br />
-                        [W/A/S/D] - PITCH/YAW<br />
-                        [Q/E] - ROLL<br />
-                        [R/F] - SPEED +/-<br />
-                        [MOUSE] - LOOK/STEER
+            {!isPortrait && (
+                <div className="absolute bottom-8 left-8 pointer-events-none z-50">
+                    <div className="text-cyan-300 font-mono text-xs bg-black/90 p-4 rounded-lg backdrop-blur-md border-2 border-cyan-400 shadow-[0_0_30px_rgba(34,211,238,0.4)]">
+                        <p className="font-bold text-lg mb-1 text-cyan-200 shadow-cyan-500/50 drop-shadow-md">SYSTEM STATUS</p>
+                        <p>MODE: <span className="text-white font-bold drop-shadow-sm">{isSupported ? 'GYRO_FLIGHT' : 'MANUAL_OVERRIDE'}</span></p>
+                        <p>SECTOR: <span className="text-white font-bold drop-shadow-sm">UNCHARTED</span></p>
+                        <div className="mt-2 text-[10px] text-cyan-400 font-bold">
+                            CONTROLS:<br />
+                            [W/A/S/D] - PITCH/YAW<br />
+                            [Q/E] - ROLL<br />
+                            [R/F] - SPEED +/-<br />
+                            [MOUSE] - LOOK/STEER
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
 
             {/* Controls - OUTSIDE CANVAS */}
-            <div className="absolute bottom-8 right-8 flex gap-8 items-end pointer-events-auto z-50">
-                <SpeedLever value={speedDisplay} currentValue={currentSpeed} onChange={handleSpeedChange} />
-                <Joystick onMove={handleJoystickMove} />
-            </div>
+            {!isPortrait && (
+                <div className="absolute bottom-8 right-8 flex gap-8 items-end pointer-events-auto z-50">
+                    <SpeedLever value={speedDisplay} currentValue={currentSpeed} onChange={handleSpeedChange} />
+                    <Joystick onMove={handleJoystickMove} />
+                </div>
+            )}
 
             {/* Crosshair */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-90 z-40">
